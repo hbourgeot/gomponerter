@@ -7,6 +7,8 @@ import (
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // App struct
@@ -44,38 +46,46 @@ func (a *App) shutdown(ctx context.Context) {
 
 // Greet returns a greeting for the given name
 func (a *App) ToGomp(code, contextType string) string {
-	r := strings.NewReader(code)
+	caser := cases.Title(language.AmericanEnglish)
+	r := strings.NewReader(code) // HTML reader, reading from the HTML code
+
+	// Create a node
 	context := &html.Node{
 		Type:     html.ElementNode,
 		Data:     contextType,
-		DataAtom: atom.Lookup([]byte(contextType)),
+		DataAtom: atom.Lookup([]byte(contextType)), // root element
 	}
+
+	// parsing the fragment as nodes
 	nodes, err := html.ParseFragment(r, context)
 	if err != nil {
 		return fmt.Sprintf("There was an error: %v", err)
 	}
 
-	var f func(*html.Node, int) string
+	var f func(*html.Node, int) string // declaring a internal function
 	f = func(n *html.Node, indentLevel int) string {
-		indent := strings.Repeat("  ", indentLevel) // Dos espacios de indentación
+		indent := strings.Repeat("  ", indentLevel)
 		if n.Type == html.ElementNode {
-			attributes := ""
+			attributes := "" // declare the attributes variable
 			for _, a := range n.Attr {
-				attributes += fmt.Sprintf(`h.%s("%s"),`, strings.Title(a.Key), a.Val)
+				attributes += fmt.Sprintf(`h.%s("%s"),`, caser.String(a.Key), a.Val) // concatenate any attribute
 			}
 
-			children := []string{}
+			children := []string{} // children elements
 			for c := n.FirstChild; c != nil; c = c.NextSibling {
 				childStr := f(c, indentLevel+1)
 				if childStr != "" {
 					children = append(children, childStr)
 				}
 			}
+			// joining
 			childrenStr := strings.Join(children, "\n"+indent)
 			if childrenStr != "" {
 				childrenStr = "\n" + indent + childrenStr + "\n" + indent
 			}
-			return fmt.Sprintf("%sh.%s(%s%s),", indent, strings.Title(n.Data), attributes, childrenStr)
+
+			//
+			return fmt.Sprintf("%sh.%s(%s%s),", indent, caser.String(n.Data), attributes, childrenStr)
 		} else if n.Type == html.TextNode {
 			trimmedData := strings.TrimSpace(n.Data)
 			if trimmedData != "" {
@@ -85,9 +95,9 @@ func (a *App) ToGomp(code, contextType string) string {
 		return ""
 	}
 
-	// Solo toma el primer nodo para este ejemplo
+	// Only we use the first root element, if there are many root elements, there would not considered
 	if len(nodes) > 0 {
-		return fmt.Sprintf("func container() g.Node {\n  return %s\n}", f(nodes[0], 1))
+		return fmt.Sprintf("func Container() g.Node {\n  return %s\n}", f(nodes[0], 1))
 	}
 	return "No nodes to process"
 }

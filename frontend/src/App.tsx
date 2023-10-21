@@ -3,7 +3,7 @@ import { Textarea } from "./components/ui/textarea";
 import { Label } from "./components/ui/label";
 import { ToGomp } from "@/lib/wailsjs/go/main/App";
 import React from "react";
-import { Separator } from "./components/ui/separator";
+
 function App() {
   const [gompCode, setGompCode] = React.useState("");
   const [htmlCode, setHtmlCode] = React.useState("");
@@ -12,7 +12,6 @@ function App() {
     const context = htmlCode.replace(" ", "-").split("-")[0].replace("<", "");
 
     const res = await ToGomp(htmlCode, context);
-    console.log(res);
     setGompCode(res);
   };
 
