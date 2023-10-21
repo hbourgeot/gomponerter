@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 // App struct
@@ -39,6 +43,51 @@ func (a *App) shutdown(ctx context.Context) {
 }
 
 // Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
+func (a *App) ToGomp(code, contextType string) string {
+	r := strings.NewReader(code)
+	context := &html.Node{
+		Type:     html.ElementNode,
+		Data:     contextType,
+		DataAtom: atom.Lookup([]byte(contextType)),
+	}
+	nodes, err := html.ParseFragment(r, context)
+	if err != nil {
+		return fmt.Sprintf("There was an error: %v", err)
+	}
+
+	var f func(*html.Node, int) string
+	f = func(n *html.Node, indentLevel int) string {
+		indent := strings.Repeat("  ", indentLevel) // Dos espacios de indentación
+		if n.Type == html.ElementNode {
+			attributes := ""
+			for _, a := range n.Attr {
+				attributes += fmt.Sprintf(`h.%s("%s"),`, strings.Title(a.Key), a.Val)
+			}
+
+			children := []string{}
+			for c := n.FirstChild; c != nil; c = c.NextSibling {
+				childStr := f(c, indentLevel+1)
+				if childStr != "" {
+					children = append(children, childStr)
+				}
+			}
+			childrenStr := strings.Join(children, "\n"+indent)
+			if childrenStr != "" {
+				childrenStr = "\n" + indent + childrenStr + "\n" + indent
+			}
+			return fmt.Sprintf("%sh.%s(%s%s),", indent, strings.Title(n.Data), attributes, childrenStr)
+		} else if n.Type == html.TextNode {
+			trimmedData := strings.TrimSpace(n.Data)
+			if trimmedData != "" {
+				return fmt.Sprintf("%sg.Text('%s'),", indent, trimmedData)
+			}
+		}
+		return ""
+	}
+
+	// Solo toma el primer nodo para este ejemplo
+	if len(nodes) > 0 {
+		return fmt.Sprintf("func container() g.Node {\n  return %s\n}", f(nodes[0], 1))
+	}
+	return "No nodes to process"
 }
