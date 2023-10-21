@@ -76,3 +76,10 @@
     @apply bg-background text-foreground;
   }
 }
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono&display=swap');
+
+textarea {
+  font-family: "DM Mono", monospace;
+  resize: vertical;
+}
