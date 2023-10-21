@@ -3,6 +3,7 @@ import { Textarea } from "./components/ui/textarea";
 import { Label } from "./components/ui/label";
 import { ToGomp } from "@/lib/wailsjs/go/main/App";
 import React from "react";
+import { Separator } from "./components/ui/separator";
 function App() {
   const [gompCode, setGompCode] = React.useState("");
   const [htmlCode, setHtmlCode] = React.useState("");
@@ -26,7 +27,7 @@ function App() {
       <p className="text-lg text-black">
         Write here your HTML Code like you do normally
       </p>
-      <div className="flex justify-evenly items-start space-y-4 p-5 w-[90%] gap-5 flex-wrap">
+      <div className="flex justify-evenly items-center space-x-4 p-5 w-[90%] gap-5 flex-wrap">
         <div className="flex flex-col items-center gap-y-4 w-[40%]">
           <Label htmlFor="html" className="self-start">
             HTML code
@@ -40,6 +41,7 @@ function App() {
             id="html"
           />
         </div>
+        <div className="border-l-2 border-l-gray-300/50 border-solid hidden md:block w-1/10 h-[100px]"></div>
         <div className="flex flex-col items-center w-[40%] gap-y-4 !mt-0">
           <Label htmlFor="gomp" className="self-start">
             Gomponent code
